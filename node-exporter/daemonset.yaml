@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: default
+  labels:
+    k8s-app: node-exporter
+    monitor-me: "true"
+spec:
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      k8s-app: node-exporter
+  template:
+    metadata:
+      name: node-exporter
+      labels:
+        k8s-app: node-exporter
+        monitor-me: "true"
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: "NoSchedule"
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+      terminationGracePeriodSeconds: 10
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - image: quay.io/prometheus/node-exporter:v0.15.2
+        args:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --collector.interrupts
+        - --collector.systemd
+        - --collector.ksmd
+        - --collector.filesystem.ignored-mount-points
+        - "^/(sys|proc|dev|host|etc|run|rootfs/var/lib)($|/)"
+        - --collector.filesystem.ignored-fs-types
+        - "^(cgroup|configfs|pstore|proc|overlay|devpts|debugfs|securityfs|binfmt_misc|mqueue|tmpfs|nsfs|hugetlbfs|devtmpfs|shm|rpc_pipefs|nfsd|sysfs|autofs)$"
+        - --collector.netdev.ignored-devices
+        - "^(veth.+|cali.+)$"
+        - --collector.systemd.unit-whitelist
+        - ".+.service"
+        - --collector.textfile.directory
+        - "/var/lib/node_exporter"
+        - --log.level=warn
+        name: node-exporter
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: scrape
+        resources:
+          requests:
+            cpu: 100m
+            memory: 130Mi
+          limits:
+            cpu: 200m
+            memory: 225Mi
+        securityContext:
+          privileged: true
+        volumeMounts:
+        # Needed because of issue: https://github.com/prometheus/node_exporter/issues/273
+        - name: system-dbus-socket
+          readOnly: true
+          mountPath: /var/run/dbus/system_bus_socket
+        - name: root
+          readOnly: true
+          mountPath: /rootfs
+        - name: proc
+          readOnly:  true
+          mountPath: /host/proc
+        - name: sys
+          readOnly: true
+          mountPath: /host/sys
+        - name: prom-files
+          readOnly: true
+          mountPath: /var/lib/node_exporter
+      - image: quay.io/galexrt/node-exporter-smartmon:v1.0.2
+        name: smartmon
+        env:
+        - name: INTERVAL
+          value: "90"
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            cpu: 20m
+            memory: 50Mi
+          limits:
+            cpu: 100m
+            memory: 75Mi
+        volumeMounts:
+        - name: prom-files
+          readOnly: false
+          mountPath: /var/lib/node_exporter
+      volumes:
+      - name: system-dbus-socket
+        hostPath:
+          path: /var/run/dbus/system_bus_socket
+      - name: root
+        hostPath:
+          path: /
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: prom-files
+        hostPath:
+          path: /var/lib/node_exporter

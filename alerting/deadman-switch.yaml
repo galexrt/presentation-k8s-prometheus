@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    prometheus: prometheus
+    role: alert-rules
+  name: prometheus-prometheus-rules
+spec:
+  groups:
+  - name: ./deadman-switch.rules
+    rules:
+    - alert: DeadManSwitch
+      expr: vector(1)

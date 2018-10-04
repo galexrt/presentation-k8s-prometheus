@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  labels:
+    prometheus: prometheus
+spec:
+  replicas: 2
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchExpressions:
+      - {key: k8s-app, operator: In, values: [node-exporter, kube-state-metrics]}
+  alerting:
+    alertmanagers:
+    - namespace: default
+      name: alertmanager-example
+      port: web
+  ruleSelector:
+    matchLabels:
+      prometheus: prometheus
+      role: alert-rules
