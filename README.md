@@ -1,4 +1,4 @@
-# kubernetes-prometheus-demo
+# presentation-k8s-prometheus
 
 The example files are using [coreos/prometheus-operator](https://github.com/coreos/prometheus-operator) to run
 Prometheus and Alertmanager.
