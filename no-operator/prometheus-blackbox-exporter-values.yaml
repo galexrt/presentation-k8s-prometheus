@@ -9,13 +9,74 @@ nodeSelector: {}
 
 config:
   modules:
-    http_2xx:
-      prober: http
-      timeout: 5s
-      http:
-        valid_http_versions: ["HTTP/1.1", "HTTP/2"]
-        no_follow_redirects: false
-        preferred_ip_protocol: "ip4"
+      http_2xx:
+        prober: http
+        timeout: 5s
+        http:
+          valid_http_versions: ["HTTP/1.1", "HTTP/2"]
+          # set to [] after generate_servicemonitor.sh has been fixed.
+          valid_status_codes: [200, 201, 202, 203, 204, 205, 206, 207, 208]  # Defaults to 2xx
+          method: GET
+          no_follow_redirects: true
+          fail_if_ssl: false
+          fail_if_not_ssl: true
+          #fail_if_matches_regexp:
+          #  - "Could not connect to database"
+          #fail_if_not_matches_regexp:
+          #  - "Download the latest version here"
+          tls_config:
+            insecure_skip_verify: false
+          preferred_ip_protocol: "ip4" # defaults to "ip6"
+      ssh_banner:
+        prober: tcp
+        tcp:
+          query_response:
+          - expect: "^SSH-2.0-"
+          preferred_ip_protocol: "ip4" # defaults to "ip6"
+      tls_connect:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          tls: true
+          preferred_ip_protocol: "ip4" # defaults to "ip6"
+      tcp_connect:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          preferred_ip_protocol: "ip4" # defaults to "ip6"
+      imap_starttls:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          query_response:
+            - expect: "OK.*STARTTLS"
+            - send: ". STARTTLS"
+            - expect: "OK"
+            - starttls: true
+            - send: ". capability"
+            - expect: "CAPABILITY IMAP4rev1"
+          preferred_ip_protocol: "ip4" # defaults to "ip6"
+      smtp_starttls:
+        prober: tcp
+        timeout: 5s
+        tcp:
+          query_response:
+            - expect: "^220 ([^ ]+) ESMTP (.+)$"
+            - send: "EHLO prober"
+            - expect: "^250-STARTTLS"
+            - send: "STARTTLS"
+            - expect: "^220"
+            - starttls: true
+            - send: "EHLO prober"
+            - expect: "^250-AUTH"
+            - send: "QUIT"
+          preferred_ip_protocol: "ip4" # defaults to "ip6"
+      icmp:
+        prober: icmp
+        timeout: 5s
+        icmp:
+          preferred_ip_protocol: "ip4"
+          source_ip_address: "127.0.0.1"
 
 resources:
   # limits:
