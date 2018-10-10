@@ -14,9 +14,12 @@ export YOUR_NAMESPACE=my-monitoring-test
 find ./prometheus/ -type f -exec sed -i 's/mh-monitoring/'"${YOUR_NAMESPACE}"'/g' {} \;
 helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ -f ./prometheus-values.yaml ./prometheus/
 helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ -f ./prometheus-blackbox-exporter-values.yaml ./prometheus-blackbox-exporter/
+# Grafana install (optional)
+helm init --client-only
+helm fetch stable/grafana
+# Add `--set 'securityContext='` if you are running on OpenShift
+helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ ./grafana-*.tgz
+# END Grafana optional
 # kubectl or oc
 kubectl apply -R -f ./rendered/
-# Grafana install (optional)
-helm fetch stable/grafana
-helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ -f ./prometheus-values.yaml ./prometheus/
 ```

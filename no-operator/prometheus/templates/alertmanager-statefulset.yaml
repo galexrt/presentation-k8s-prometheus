@@ -1,6 +1,6 @@
 {{- if .Values.alertmanager.enabled -}}
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 metadata:
   labels:
     app: {{ template "prometheus.name" . }}
@@ -15,6 +15,12 @@ spec:
   strategy:
 {{ toYaml .Values.server.strategy | indent 4 }}
   {{- end }}
+  serviceName: {{ template "prometheus.server.fullname" . }}
+  selector:
+    matchLabels:
+      app: {{ template "prometheus.name" . }}
+      component: "{{ .Values.alertmanager.name }}"
+      release: {{ .Release.Name }}
   template:
     metadata:
     {{- if .Values.alertmanager.podAnnotations }}
@@ -55,7 +61,6 @@ spec:
           {{- if .Values.alertmanager.baseURL }}
             - --web.external-url={{ .Values.alertmanager.baseURL }}
           {{- end }}
-
           ports:
             - containerPort: 9093
           readinessProbe:
@@ -69,10 +74,9 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config
-            - name: storage-volume
+            - name: {{ template "prometheus.alertmanager.fullname" . }}
               mountPath: "{{ .Values.alertmanager.persistentVolume.mountPath }}"
               subPath: "{{ .Values.alertmanager.persistentVolume.subPath }}"
-
         - name: {{ template "prometheus.name" . }}-{{ .Values.alertmanager.name }}-{{ .Values.configmapReload.name }}
           image: "{{ .Values.configmapReload.image.repository }}:{{ .Values.configmapReload.image.tag }}"
           imagePullPolicy: "{{ .Values.configmapReload.image.pullPolicy }}"
@@ -105,11 +109,37 @@ spec:
         - name: config-volume
           configMap:
             name: {{ if .Values.alertmanager.configMapOverrideName }}{{ .Release.Name }}-{{ .Values.alertmanager.configMapOverrideName }}{{- else }}{{ template "prometheus.alertmanager.fullname" . }}{{- end }}
-        - name: storage-volume
-        {{- if .Values.alertmanager.persistentVolume.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ if .Values.alertmanager.persistentVolume.existingClaim }}{{ .Values.alertmanager.persistentVolume.existingClaim }}{{- else }}{{ template "prometheus.alertmanager.fullname" . }}{{- end }}
-        {{- else }}
+        {{- if not .Values.alertmanager.persistentVolume.enabled }}
+        - name: {{ template "prometheus.alertmanager.fullname" . }}
           emptyDir: {}
         {{- end -}}
+
+{{- if .Values.server.persistentVolume.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ template "prometheus.server.fullname" . }}
+{{- if .Values.server.persistentVolume.annotations }}
+      annotations:
+{{ toYaml .Values.server.persistentVolume.annotations | indent 8 }}
+{{- end }}
+      labels:
+        app: {{ template "prometheus.name" . }}
+        chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        component: "{{ .Values.server.name }}"
+        heritage: {{ .Release.Service }}
+        release: {{ .Release.Name }}
+    spec:
+      accessModes:
+{{ toYaml .Values.server.persistentVolume.accessModes | indent 6 }}
+{{- if .Values.server.persistentVolume.storageClass }}
+{{- if (eq "-" .Values.server.persistentVolume.storageClass) }}
+      storageClassName: ""
+{{- else }}
+      storageClassName: "{{ .Values.server.persistentVolume.storageClass }}"
+{{- end }}
+{{- end }}
+      resources:
+        requests:
+          storage: "{{ .Values.server.persistentVolume.size }}"
+{{- end -}}
 {{- end }}

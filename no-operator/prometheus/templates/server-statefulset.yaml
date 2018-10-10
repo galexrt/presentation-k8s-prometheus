@@ -1,5 +1,5 @@
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 metadata:
 {{- if .Values.server.deploymentAnnotations }}
   annotations:
@@ -18,6 +18,12 @@ spec:
   strategy:
 {{ toYaml .Values.server.strategy | indent 4 }}
   {{- end }}
+  serviceName: {{ template "prometheus.server.fullname" . }}
+  selector:
+    matchLabels:
+      app: {{ template "prometheus.name" . }}
+      component: "{{ .Values.server.name }}"
+      release: {{ .Release.Name }}
   template:
     metadata:
     {{- if .Values.server.podAnnotations }}
@@ -50,7 +56,7 @@ spec:
         # 65534 is the nobody user that prometheus uses.
         command: ["chown", "-R", "65534:65534", "{{ .Values.server.persistentVolume.mountPath }}"]
         volumeMounts:
-        - name: storage-volume
+        - name: {{ template "prometheus.server.fullname" . }}
           mountPath: {{ .Values.server.persistentVolume.mountPath }}
           subPath: "{{ .Values.server.persistentVolume.subPath }}"
       {{- end }}
@@ -155,11 +161,8 @@ spec:
         - name: config-volume
           configMap:
             name: {{ if .Values.server.configMapOverrideName }}{{ .Release.Name }}-{{ .Values.server.configMapOverrideName }}{{- else }}{{ template "prometheus.server.fullname" . }}{{- end }}
+        {{- if not .Values.server.persistentVolume.enabled }}
         - name: storage-volume
-        {{- if .Values.server.persistentVolume.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ if .Values.server.persistentVolume.existingClaim }}{{ .Values.server.persistentVolume.existingClaim }}{{- else }}{{ template "prometheus.server.fullname" . }}{{- end }}
-        {{- else }}
           emptyDir: {}
         {{- end -}}
       {{- range .Values.server.extraHostPathMounts }}
@@ -187,3 +190,32 @@ spec:
           configMap:
             name: {{ .configMap }}
       {{- end }}
+
+{{- if .Values.server.persistentVolume.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ template "prometheus.server.fullname" . }}
+{{- if .Values.server.persistentVolume.annotations }}
+      annotations:
+{{ toYaml .Values.server.persistentVolume.annotations | indent 8 }}
+{{- end }}
+      labels:
+        app: {{ template "prometheus.name" . }}
+        chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        component: "{{ .Values.server.name }}"
+        heritage: {{ .Release.Service }}
+        release: {{ .Release.Name }}
+    spec:
+      accessModes:
+{{ toYaml .Values.server.persistentVolume.accessModes | indent 6 }}
+{{- if .Values.server.persistentVolume.storageClass }}
+{{- if (eq "-" .Values.server.persistentVolume.storageClass) }}
+      storageClassName: ""
+{{- else }}
+      storageClassName: "{{ .Values.server.persistentVolume.storageClass }}"
+{{- end }}
+{{- end }}
+      resources:
+        requests:
+          storage: "{{ .Values.server.persistentVolume.size }}"
+{{- end -}}
