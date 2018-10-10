@@ -17,4 +17,7 @@ helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./render
 helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ -f ./prometheus-blackbox-exporter-values.yaml ./prometheus-blackbox-exporter/
 # kubectl or oc
 kubectl apply -R -f ./rendered/
+# Grafana install (optional)
+helm fetch stable/grafana
+helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ -f ./prometheus-values.yaml ./prometheus/
 ```
