@@ -11,7 +11,9 @@ I will probably return some of my modifications back to the repo when I have the
 
 ```
 export YOUR_NAMESPACE=my-monitoring-test
-mkdir -p ./prometheus-rendered/ ./prometheus-blackbox-exporter
-helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./prometheus-rendered/ -f ./prometheus-values.yaml ./prometheus/
-helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./prometheus-rendered/ -f ./prometheus-blackbox-exporter-values.yaml ./prometheus-blackbox-exporter/
+mkdir -p ./rendered/
+helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ -f ./prometheus-values.yaml ./prometheus/
+helm template --namespace ${YOUR_NAMESPACE} --name example --output-dir ./rendered/ -f ./prometheus-blackbox-exporter-values.yaml ./prometheus-blackbox-exporter/
+# kubectl or oc
+kubectl apply -R -f ./rendered/
 ```
