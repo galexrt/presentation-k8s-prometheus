@@ -117,7 +117,7 @@ spec:
 {{- if .Values.server.persistentVolume.enabled }}
   volumeClaimTemplates:
   - metadata:
-      name: {{ template "prometheus.server.fullname" . }}
+      name: {{ template "prometheus.alertmanager.fullname" . }}
 {{- if .Values.server.persistentVolume.annotations }}
       annotations:
 {{ toYaml .Values.server.persistentVolume.annotations | indent 8 }}
@@ -125,21 +125,21 @@ spec:
       labels:
         app: {{ template "prometheus.name" . }}
         chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-        component: "{{ .Values.server.name }}"
+        component: "{{ .Values.alertmanager.name }}"
         heritage: {{ .Release.Service }}
         release: {{ .Release.Name }}
     spec:
       accessModes:
-{{ toYaml .Values.server.persistentVolume.accessModes | indent 6 }}
-{{- if .Values.server.persistentVolume.storageClass }}
-{{- if (eq "-" .Values.server.persistentVolume.storageClass) }}
+{{ toYaml .Values.alertmanager.persistentVolume.accessModes | indent 6 }}
+{{- if .Values.alertmanager.persistentVolume.storageClass }}
+{{- if (eq "-" .Values.alertmanager.persistentVolume.storageClass) }}
       storageClassName: ""
 {{- else }}
-      storageClassName: "{{ .Values.server.persistentVolume.storageClass }}"
+      storageClassName: "{{ .Values.alertmanager.persistentVolume.storageClass }}"
 {{- end }}
 {{- end }}
       resources:
         requests:
-          storage: "{{ .Values.server.persistentVolume.size }}"
+          storage: "{{ .Values.alertmanager.persistentVolume.size }}"
 {{- end -}}
 {{- end }}
