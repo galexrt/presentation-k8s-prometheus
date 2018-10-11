@@ -29,7 +29,7 @@ data:
           - role: pod
             namespaces:
               names:
-                - mh-monitoring
+                - my-monitoring-test
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token

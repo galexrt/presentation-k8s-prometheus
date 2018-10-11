@@ -830,7 +830,7 @@ serverFiles:
           - role: endpoints
             namespaces:
               names:
-                - mh-monitoring
+                - my-monitoring-test
 
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
@@ -874,7 +874,7 @@ serverFiles:
           - role: service
             namespaces:
               names:
-                - mh-monitoring
+                - my-monitoring-test
 
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe]
@@ -907,7 +907,7 @@ serverFiles:
           - role: pod
             namespaces:
               names:
-                - mh-monitoring
+                - my-monitoring-test
 
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
