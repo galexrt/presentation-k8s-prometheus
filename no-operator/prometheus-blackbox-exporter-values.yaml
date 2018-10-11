@@ -110,7 +110,7 @@ podAnnotations: {}
 extraArgs: []
 #  --history.limit=1000
 
-replicas: 1
+replicas: 2
 ## Monitors ConfigMap changes and POSTs to a URL
 ## Ref: https://github.com/jimmidyson/configmap-reload
 ##
