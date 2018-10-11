@@ -169,7 +169,7 @@ alertmanager:
   ##
   podAnnotations: {}
 
-  replicaCount: 1
+  replicaCount: 2
 
   ## alertmanager resource requests and limits
   ## Ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -636,7 +636,7 @@ server:
   podAnnotations: {}
     # iam.amazonaws.com/role: prometheus
 
-  replicaCount: 1
+  replicaCount: 2
 
   ## Prometheus server resource requests and limits
   ## Ref: http://kubernetes.io/docs/user-guide/compute-resources/
