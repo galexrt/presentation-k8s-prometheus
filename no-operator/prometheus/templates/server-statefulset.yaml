@@ -122,7 +122,7 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config
-            - name: storage-volume
+            - name: {{ template "prometheus.server.fullname" . }}
               mountPath: {{ .Values.server.persistentVolume.mountPath }}
               subPath: "{{ .Values.server.persistentVolume.subPath }}"
           {{- range .Values.server.extraHostPathMounts }}
