@@ -11,7 +11,7 @@ I will probably return some of my modifications back to the repo when I have the
 
 ```
 export YOUR_NAMESPACE=my-monitoring-test
-find ./prometheus/ -type f -exec sed -i 's/my-monitoring-test/'"${YOUR_NAMESPACE}"'/g' {} \;
+find ./ -type f -exec sed -i 's/my-monitoring-test/'"${YOUR_NAMESPACE}"'/g' {} \;
 helm template --namespace ${YOUR_NAMESPACE} --name mon --output-dir ./rendered/ -f ./prometheus-values.yaml ./prometheus/
 helm template --namespace ${YOUR_NAMESPACE} --name mon --output-dir ./rendered/ -f ./prometheus-blackbox-exporter-values.yaml ./prometheus-blackbox-exporter/
 # Grafana install (optional)
